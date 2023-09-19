@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from typing import Optional
 
 from sqlalchemy import func, String, Integer, Enum, CheckConstraint, select
@@ -19,7 +19,7 @@ class Habit(Base):
     habit_id: Mapped[int] = mapped_column(Integer(), name='id', primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(), nullable=False)
     periodicity: Mapped[Periodicity] = mapped_column(Enum(Periodicity), nullable=False)
-    creation_date: Mapped[Optional[datetime]] = mapped_column(default=datetime.now(), server_default=func.CURRENT_TIMESTAMP(), nullable=False)
+    creation_date: Mapped[Optional[datetime]] = mapped_column(default=datetime.now(), server_default=func.current_timestamp(), nullable=False)
 
     def __repr__(self) -> str:
         return f"Habit(id={self.habit_id!r}, name={self.name!r}, periodicity={self.periodicity!r}, creation_date={self.creation_date!r})"
@@ -35,7 +35,7 @@ class Habit(Base):
         session.delete(self)
         session.commit()
 
-    def complete(self, session: Session) -> HabitEntry:
+    def complete(self, session: Session) -> Optional[HabitEntry]:
         """
         Complete a habit by creating a new entry in the HabitEntry table.
 
@@ -43,7 +43,30 @@ class Habit(Base):
 
         :returns: Created HabitEntry
         """
-        new_entry = HabitEntry(habit_id=self.habit_id)
+        current_streak = HabitEntry.get_current_streak(session, self.habit_id)
+
+        # If there is no previous streak, this is the first time the Habit is completed
+        streak: int
+        if current_streak is None:
+            streak = 0
+        else:
+            streak_validity = self.__check_streak_validity(current_streak.latest_date)
+
+            # Check if we already completed the Habit in the current period
+            if streak_validity is None:
+                if self.periodicity is Periodicity.Daily:
+                    print("You have already completed this Habit today!")
+                else:
+                    print("You have already completed this Habit this week!")
+                return None
+
+            # Check if we passed the "Break Date" for our current Streak
+            if streak_validity:
+                streak = current_streak.streak
+            else:
+                streak = current_streak.streak + 1
+
+        new_entry = HabitEntry(habit_id=self.habit_id, streak=streak)
 
         session.add(new_entry)
         session.commit()
@@ -92,5 +115,33 @@ class Habit(Base):
             return None
 
         return target_habit
+
+# endregion
+
+# region Helpers
+
+    def __check_streak_validity(self, last_completion: datetime) -> Optional[bool]:
+        current_date = date.today()
+        last_completion_date = last_completion.date()
+
+        break_date: date
+        if self.periodicity is Periodicity.Daily:
+            # If we already completed the Habit today, don't do anything
+            if last_completion_date == current_date:
+                return None
+
+            break_date = last_completion_date + timedelta(days=2)
+        else:
+            last_completion_week = last_completion_date.isocalendar().week
+            current_week = current_date.isocalendar().week
+
+            # If we already completed the Habit this week, don't do anything
+            if last_completion_week == current_week:
+                return None
+
+            days_until_monday = 7 - last_completion_date.weekday() if last_completion_date.weekday() > 0 else 0       # Get the number of days till Monday
+            break_date = last_completion_date + timedelta(days=days_until_monday + 7)                                 # Add another week
+
+        return current_date < break_date
 
 # endregion

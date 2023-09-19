@@ -1,12 +1,13 @@
+from typing import Optional
+
 import click
+from click import Group, Context
 from sqlalchemy.orm import Session
 
 from classes.orm.habit import Habit
 from classes.periodicity import Periodicity
 from helpers import cli_helper
 from helpers.validations import validate_habit_name, validate_periodicity
-from click import Group, Context
-from typing import Optional
 
 
 @click.group()
@@ -40,7 +41,7 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
         habit_name = cli_helper.get_input('Name: ', 'Name needs to include at least one non-whitespace Character!', habit_name_condition)
 
     with Session(ctx.obj['connection']) as session:
-        target_habit = Habit.get(session, habit_name, habit_id)
+        target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is None:
             return
 
@@ -67,7 +68,7 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period:
 
 @habit.command(name='complete')
 @click.option('-i', '--id', 'habit_id', type=int, default=None, help='ID of the Habit that should be searched for. Takes precedence over --name.')
-@click.option('-n', '--name', required=False, prompt=True, help='Name of the Habit to help with identification', type=str)
+@click.option('-n', '--name', 'habit_name', required=False, prompt=True, help='Name of the Habit to help with identification', type=str)
 @click.pass_context
 def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str]) -> None:
     """
@@ -78,7 +79,7 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
         habit_name = cli_helper.get_input('Name: ', 'Name needs to include at least one non-whitespace Character!', habit_name_condition)
 
     with Session(ctx.obj['connection']) as session:
-        target_habit = Habit.get(session, habit_name, habit_id)
+        target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is not None:
             target_habit.complete(session)
 
