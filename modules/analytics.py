@@ -1,10 +1,10 @@
 from typing import Optional
 
 import click
-from click import Group
+from click import Group, Context
 
 from classes.periodicity import Periodicity
-from classes.validations import validate_periodicity
+from helpers.validations import validate_periodicity
 
 
 @click.group()
@@ -14,7 +14,8 @@ def analytics() -> Group:
 
 @analytics.command(name='list')
 @click.option('-p', '--period', default=None, help='Periodicity of the Habit(s) that should be searched for.', type=click.UNPROCESSED, callback=validate_periodicity)
-def analytics_list(period: Optional[Periodicity]) -> None:
+@click.pass_context
+def analytics_list(ctx: Context, period: Optional[Periodicity]) -> None:
     """
     Lists all existing Habits.
     If a Periodicity is given, uses it as a filter.
@@ -26,7 +27,8 @@ def analytics_list(period: Optional[Periodicity]) -> None:
 @click.option('-i', '--id', 'habit_id', type=int, default=None, help='ID of the Habit that should be searched for. Takes precedence over --name.')
 @click.option('-n', '--name', type=str, default=None, help='Name of the Habit that should be searched for.')
 @click.option('-p', '--period', default=None, help='Periodicity of the Habit(s) that should be searched for.', type=click.UNPROCESSED, callback=validate_periodicity)
-def analytics_longest_streak(habit_id: Optional[int], name: Optional[str], period: Optional[Periodicity]) -> None:
+@click.pass_context
+def analytics_longest_streak(ctx: Context, habit_id: Optional[int], name: Optional[str], period: Optional[Periodicity]) -> None:
     """
     Find the longest streak of a Habit based on the given parameters.
     Habits are identified either by their ID or their Name.
