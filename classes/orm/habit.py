@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import func, String, Integer, Enum, CheckConstraint
+from sqlalchemy import func, String, Integer, Enum, CheckConstraint, select
 from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from classes.orm.base import Base
@@ -23,24 +23,6 @@ class Habit(Base):
 
     def __repr__(self) -> str:
         return f"Habit(id={self.habit_id!r}, name={self.name!r}, periodicity={self.periodicity!r}, creation_date={self.creation_date!r})"
-
-    @staticmethod
-    def create(session: Session, name: str, periodicity: Periodicity) -> 'Habit':
-        """
-        Creates a new habit object and saves it to the database.
-
-        :param session: The SQLAlchemy session object.
-        :param name: Desired name for the new habit.
-        :param periodicity: Desired periodicity for the new habit. Either daily or weekly.
-
-        :returns: Created Habit
-        """
-        new_habit = Habit(name=name, periodicity=periodicity)
-
-        session.add(new_habit)
-        session.commit()
-
-        return new_habit
 
     def delete(self, session: Session) -> None:
         """
@@ -67,3 +49,48 @@ class Habit(Base):
         session.commit()
 
         return new_entry
+
+# region Static Methods
+
+    @staticmethod
+    def create(session: Session, name: str, periodicity: Periodicity) -> 'Habit':
+        """
+        Creates a new habit object and saves it to the database.
+
+        :param session: The SQLAlchemy session object.
+        :param name: Desired name for the new habit.
+        :param periodicity: Desired periodicity for the new habit. Either daily or weekly.
+
+        :returns: Created Habit
+        """
+        new_habit = Habit(name=name, periodicity=periodicity)
+
+        session.add(new_habit)
+        session.commit()
+
+        return new_habit
+
+    @staticmethod
+    def get(session: Session, habit_id: Optional[int], habit_name: Optional[str]) -> Optional['Habit']:
+        """
+        Retrieves a Habit from the database based on the given ID / Name.
+
+        :param session: The SQLAlchemy session object.
+        :param habit_id: ID of the habit to retrieve. Takes precedence over habit_name.
+        :param habit_name: Name of the habit to retrieve.
+
+        :returns: Found Habit
+        """
+        statement = select(Habit).where(Habit.habit_id.is_(habit_id).__or__(Habit.name.is_(habit_name))).limit(1)
+
+        target_habit = session.scalar(statement)
+        if target_habit is None:
+            if habit_id is not None:
+                print(f"No Habit with ID {habit_id} found! Cancelling!")
+            else:
+                print(f"No Habit with Name {habit_name} found! Cancelling!")
+            return None
+
+        return target_habit
+
+# endregion

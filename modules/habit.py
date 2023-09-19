@@ -1,7 +1,9 @@
 import click
+from sqlalchemy.orm import Session
 
 from classes.orm.habit import Habit
 from classes.periodicity import Periodicity
+from helpers import cli_helper
 from helpers.validations import validate_habit_name, validate_periodicity
 from click import Group, Context
 from typing import Optional
@@ -20,7 +22,9 @@ def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
     """
     Creates a new Habit
     """
-    pass
+    with Session(ctx.obj['connection']) as session:
+        Habit.create(session, habit_name, period)
+        print(f"Habit {habit_name} has been created with a {period.name} Periodicity!")
 
 
 @habit.command(name='delete')
@@ -32,7 +36,20 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
     Deletes an existing Habit.
     Unless a Backup of the Database exists this is irreversible!
     """
-    pass
+    if habit_id is None and not habit_name_condition(habit_name):
+        habit_name = cli_helper.get_input('Name: ', 'Name needs to include at least one non-whitespace Character!', habit_name_condition)
+
+    with Session(ctx.obj['connection']) as session:
+        target_habit = Habit.get(session, habit_name, habit_id)
+        if target_habit is None:
+            return
+
+        if not cli_helper.confirm_action("Are you sure you want to delete this Habit? (y/n): "):
+            print("Cancelling!")
+            return
+
+        target_habit.delete(session)
+        print(f"Habit \"{target_habit.name}\" has been deleted!")
 
 
 @habit.command(name='modify')
@@ -57,4 +74,19 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
     Completes a habit via either its ID or name.
     If both are given, the ID takes precedence.
     """
-    pass
+    if habit_id is None and not habit_name_condition(habit_name):
+        habit_name = cli_helper.get_input('Name: ', 'Name needs to include at least one non-whitespace Character!', habit_name_condition)
+
+    with Session(ctx.obj['connection']) as session:
+        target_habit = Habit.get(session, habit_name, habit_id)
+        if target_habit is not None:
+            target_habit.complete(session)
+
+# region Helpers
+
+
+def habit_name_condition(input_string: str) -> bool:
+    return input_string is not None and not input_string.isspace() and len(input_string) != 0
+
+
+# endregion
