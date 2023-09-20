@@ -1,4 +1,3 @@
-from __future__ import annotations
 from enum import Enum
 
 
@@ -7,7 +6,7 @@ class Periodicity(Enum):
     Weekly = 2
 
     @staticmethod
-    def from_str(value: str) -> Periodicity:
+    def from_str(value: str) -> 'Periodicity':
         """
         Converts a string value to a Periodicity enum value.
 

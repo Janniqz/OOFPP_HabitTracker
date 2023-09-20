@@ -20,7 +20,7 @@ def habit() -> Group:
 @click.option('-p', '--period', required=True, prompt=True, help='Periodicity in which the Habit should be tracked (d/daily w/weekly)', type=click.UNPROCESSED, callback=validate_periodicity)
 @click.pass_context
 def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
-    """
+    """\b
     Creates a new Habit
     """
     with Session(ctx.obj['connection']) as session:
@@ -33,7 +33,7 @@ def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
 @click.option('-n', '--name', 'habit_name', required=False, help='Name of the Habit to help with identification', type=str)
 @click.pass_context
 def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str]) -> None:
-    """
+    """\b
     Deletes an existing Habit.
     Unless a Backup of the Database exists this is irreversible!
     """
@@ -59,9 +59,11 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
 @click.option('-p', '--period', required=False, help='Updated Periodicity for the Habit (d/daily w/weekly)', type=click.UNPROCESSED, callback=validate_periodicity)
 @click.pass_context
 def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period: Optional[Periodicity]) -> None:
-    """
+    """\b
     Modify a Habit with the provided details.
     Not providing a name / period will keep their current values.
+
+    NOTE: Changing the Periodicity might end your current Streak!
     """
     pass
 
@@ -71,7 +73,7 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period:
 @click.option('-n', '--name', 'habit_name', required=False, prompt=True, help='Name of the Habit to help with identification', type=str)
 @click.pass_context
 def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str]) -> None:
-    """
+    """\b
     Completes a habit via either its ID or name.
     If both are given, the ID takes precedence.
     """
