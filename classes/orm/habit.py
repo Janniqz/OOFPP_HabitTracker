@@ -24,6 +24,24 @@ class Habit(Base):
     def __repr__(self) -> str:
         return f"Habit(id={self.habit_id!r}, name={self.name!r}, periodicity={self.periodicity!r}, creation_date={self.creation_date!r})"
 
+    def update(self, session: Session, new_name: Optional[str] = None, new_periodicity: Optional[Periodicity] = None):
+        """
+        Updates the habit with new name and/or periodicity.
+        """
+        changes_made = False
+        if new_name is not None and new_name != self.name:
+            self.name = new_name
+            changes_made = True
+        if new_periodicity is not None and new_periodicity != self.periodicity:
+            self.periodicity = new_periodicity
+            changes_made = True
+
+        if changes_made:
+            session.commit()
+            print("Habit has been updated!")
+        else:
+            print("Habit is already up-to-date! Cancelling!")
+
     def delete(self, session: Session) -> None:
         """
         Deletes the current Habit object from the database.
@@ -94,7 +112,7 @@ class Habit(Base):
         return new_habit
 
     @staticmethod
-    def get(session: Session, habit_id: Optional[int], habit_name: Optional[str]) -> Optional['Habit']:
+    def get(session: Session, habit_id: Optional[int] = None, habit_name: Optional[str] = None) -> Optional['Habit']:
         """
         Retrieves a Habit from the database based on the given ID / Name.
 
@@ -121,6 +139,14 @@ class Habit(Base):
 # region Helpers
 
     def __check_streak_validity(self, last_completion: datetime) -> Optional[bool]:
+        """
+        Checks if the current Habit streak is still active.
+        If the Habit has already been completed in the current period, returns None.
+
+        :param last_completion: Date of the Last completion
+
+        :returns: Streak Validity / None if already completed in Period
+        """
         current_date = date.today()
         last_completion_date = last_completion.date()
 

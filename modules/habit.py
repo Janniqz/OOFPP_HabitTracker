@@ -54,9 +54,9 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
 
 
 @habit.command(name='modify')
-@click.option('-i', '--id', 'habit_id', required=True, prompt=True, help='ID of the Habit that should be modified', type=int, default=None)
-@click.option('-n', '--name', 'habit_name', required=False, help='Updated Name for the Habit', type=click.UNPROCESSED, callback=validate_habit_name)
-@click.option('-p', '--period', required=False, help='Updated Periodicity for the Habit (d/daily w/weekly)', type=click.UNPROCESSED, callback=validate_periodicity)
+@click.option('-i', '--id', 'habit_id', required=True, prompt=True, help='ID of the Habit that should be modified', type=int)
+@click.option('-n', '--name', 'habit_name', required=False, help='Updated Name for the Habit', type=click.UNPROCESSED, default=None, callback=validate_habit_name)
+@click.option('-p', '--period', required=False, help='Updated Periodicity for the Habit (d/daily w/weekly)', type=click.UNPROCESSED, default=None, callback=validate_periodicity)
 @click.pass_context
 def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period: Optional[Periodicity]) -> None:
     """\b
@@ -65,7 +65,14 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period:
 
     NOTE: Changing the Periodicity might end your current Streak!
     """
-    pass
+    if habit_name is None and period is None:
+        print("No fields to change have been passed! Cancelling!")
+        return
+
+    with Session(ctx.obj['connection']) as session:
+        target_habit = Habit.get(session, habit_id)
+        if target_habit is not None:
+            target_habit.update(session, habit_name, period)
 
 
 @habit.command(name='complete')
