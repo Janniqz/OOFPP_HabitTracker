@@ -20,6 +20,7 @@ class Habit(Base):
     name: Mapped[str] = mapped_column(String(), nullable=False)
     periodicity: Mapped[Periodicity] = mapped_column(Enum(Periodicity), nullable=False)
     streak: Mapped[int] = mapped_column(Integer(), default=0, nullable=False)
+    highest_streak: Mapped[int] = mapped_column(Integer(), default=0, nullable=False)
     creation_date: Mapped[Optional[datetime]] = mapped_column(default=datetime.now(), server_default=func.current_timestamp(), nullable=False)
 
     def __repr__(self) -> str:
@@ -90,6 +91,10 @@ class Habit(Base):
                 self.streak += 1
             else:
                 self.streak = 1
+
+        # If the current Streak is higher than the current highest one, update the highest streak
+        if self.streak > self.highest_streak:
+            self.highest_streak = self.streak
 
         new_entry = HabitEntry(habit_id=self.habit_id)
 
