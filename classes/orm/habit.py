@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, date
 from typing import Optional
 
-from sqlalchemy import func, String, Integer, Enum, CheckConstraint, select
+from sqlalchemy import func, String, Integer, Enum, CheckConstraint, select, Select, desc
 from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from classes.orm.base import Base
@@ -19,6 +19,7 @@ class Habit(Base):
     habit_id: Mapped[int] = mapped_column(Integer(), name='id', primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(), nullable=False)
     periodicity: Mapped[Periodicity] = mapped_column(Enum(Periodicity), nullable=False)
+    streak: Mapped[int] = mapped_column(Integer(), default=0, nullable=False)
     creation_date: Mapped[Optional[datetime]] = mapped_column(default=datetime.now(), server_default=func.current_timestamp(), nullable=False)
 
     def __repr__(self) -> str:
@@ -61,14 +62,20 @@ class Habit(Base):
 
         :returns: Created HabitEntry
         """
-        current_streak = HabitEntry.get_current_streak(session, self.habit_id)
+        statement: Select
+        statement = (select(HabitEntry.completion_date)
+                     .where(HabitEntry.habit_id.is_(self.habit_id))
+                     .order_by(desc(HabitEntry.completion_date))
+                     .limit(1))
+
+        last_completion: datetime
+        last_completion = session.scalar(statement)
 
         # If there is no previous streak, this is the first time the Habit is completed
-        streak: int
-        if current_streak is None:
-            streak = 0
+        if last_completion is None:
+            self.streak = 1
         else:
-            streak_validity = self.__check_streak_validity(current_streak.latest_date)
+            streak_validity = self.__check_streak_validity(last_completion)
 
             # Check if we already completed the Habit in the current period
             if streak_validity is None:
@@ -80,11 +87,11 @@ class Habit(Base):
 
             # Check if we passed the "Break Date" for our current Streak
             if streak_validity:
-                streak = current_streak.streak
+                self.streak += 1
             else:
-                streak = current_streak.streak + 1
+                self.streak = 1
 
-        new_entry = HabitEntry(habit_id=self.habit_id, streak=streak)
+        new_entry = HabitEntry(habit_id=self.habit_id)
 
         session.add(new_entry)
         session.commit()
