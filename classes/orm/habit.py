@@ -55,7 +55,7 @@ class Habit(Base):
         session.delete(self)
         session.commit()
 
-    def complete(self, session: Session) -> Optional[HabitEntry]:
+    def complete(self, session: Session) -> Optional[tuple[HabitEntry, bool]]:
         """
         Complete a habit by creating a new entry in the HabitEntry table.
 
@@ -71,6 +71,8 @@ class Habit(Base):
 
         last_completion: datetime
         last_completion = session.scalar(statement)
+
+        streak_broken = False
 
         # If there is no previous streak, this is the first time the Habit is completed
         if last_completion is None:
@@ -91,6 +93,7 @@ class Habit(Base):
                 self.streak += 1
             else:
                 self.streak = 1
+                streak_broken = True
 
         # If the current Streak is higher than the current highest one, update the highest streak
         if self.streak > self.highest_streak:
@@ -101,7 +104,7 @@ class Habit(Base):
         session.add(new_entry)
         session.commit()
 
-        return new_entry
+        return new_entry, streak_broken
 
 # region Class Methods
 

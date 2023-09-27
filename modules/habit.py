@@ -28,9 +28,9 @@ def habit(ctx: Context) -> None:
 
 @habit.command(name='create')
 @click.option('-n', '--name', 'habit_name', required=True, prompt=True, help='Name of the Habit to help with identification', type=click.UNPROCESSED, callback=validate_habit_name)
-@click.option('-p', '--period', required=True, prompt=True, help='Periodicity in which the Habit should be tracked (d/daily w/weekly)', type=click.UNPROCESSED, callback=validate_periodicity)
+@click.option('-p', '--period', 'periodicity', required=True, prompt=True, help='Periodicity in which the Habit should be tracked (d/daily w/weekly)', type=click.UNPROCESSED, callback=validate_periodicity)
 @click.pass_context
-def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
+def habit_create(ctx: Context, habit_name: str, periodicity: Periodicity) -> None:
     """\b
     Creates a new Habit
     """
@@ -39,8 +39,8 @@ def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
             colored_print(f'ERROR: Habit "{habit_name}" already exists!', TerminalColor.RED)
             return
 
-        Habit.create(session, habit_name, period)
-        colored_print(f'Habit "{habit_name}" has been created with a {period.name} Periodicity!', TerminalColor.GREEN)
+        Habit.create(session, habit_name, periodicity)
+        colored_print(f'Habit "{habit_name}" has been created with a {periodicity.name} Periodicity!', TerminalColor.GREEN)
 
 
 @habit.command(name='delete')
@@ -58,10 +58,7 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
     with Session(ctx.obj['connection']) as session:
         target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is None:
-            if habit_id is not None:
-                colored_print(f'No Habit with ID {habit_id} exists!', TerminalColor.YELLOW)
-            else:
-                colored_print(f'No Habit with Name {habit_name} exists!', TerminalColor.YELLOW)
+            colored_print(f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', TerminalColor.YELLOW)
             return
 
         click.confirm(f'Are you sure you want to delete the Habit \"{target_habit.name}\"?', abort=True)
@@ -73,9 +70,9 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
 @habit.command(name='modify')
 @click.option('-i', '--id', 'habit_id', required=True, prompt=True, help='ID of the Habit that should be modified', type=int)
 @click.option('-n', '--name', 'habit_name', required=False, help='Updated Name for the Habit', type=click.UNPROCESSED, default=None, callback=validate_habit_name)
-@click.option('-p', '--period', required=False, help='Updated Periodicity for the Habit (d/daily w/weekly)', type=click.UNPROCESSED, default=None, callback=validate_periodicity)
+@click.option('-p', '--period', 'periodicity', required=False, help='Updated Periodicity for the Habit (d/daily w/weekly)', type=click.UNPROCESSED, default=None, callback=validate_periodicity)
 @click.pass_context
-def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period: Optional[Periodicity]) -> None:
+def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], periodicity: Optional[Periodicity]) -> None:
     """\b
     Modify a Habit with the provided details.
     Not providing a name / period will keep their current values.
@@ -88,14 +85,14 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period:
             colored_print(f'ERROR: No Habit with ID {habit_id} found!', TerminalColor.RED)
             return
 
-        if habit_name is None and period is None:
+        if habit_name is None and periodicity is None:
             if click.confirm('Should the Habit name be changed?'):
                 habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
             if click.confirm('Should the Habit Periodicity be changed?'):
-                period = click.prompt('Periodicity (d/daily w/weekly)', type=click.UNPROCESSED, value_proc=validate_periodicity)
+                periodicity = click.prompt('Periodicity (d/daily w/weekly)', type=click.UNPROCESSED, value_proc=validate_periodicity)
 
-        if habit_name is None and period is None:
+        if habit_name is None and periodicity is None:
             colored_print('No fields to change have been passed! Cancelling!', TerminalColor.YELLOW)
             return
 
@@ -116,14 +113,29 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
 
     with Session(ctx.obj['connection']) as session:
         target_habit = Habit.get(session, habit_id, habit_name)
-        if target_habit is not None:
-            target_habit.complete(session)
+        if target_habit is None:
+            colored_print(f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', TerminalColor.YELLOW)
+            return
+
+        _, streak_broken = target_habit.complete(session)
+        if streak_broken:
+            colored_print(f'Your streak for Habit \"{target_habit.name}\" has been broken!', TerminalColor.YELLOW)
+
+        colored_print(f'You have completed Habit \"{target_habit.name}\"! (Streak: {target_habit.streak})', TerminalColor.GREEN)
 
 
 # region Helpers
 
 
 def habit_name_condition(input_string: str) -> bool:
+    """
+    Checks if the given string is a valid Habit Name.
+    A valid Habit Name consists of at least 1 non-whitespace character.
+
+    :param input_string: String to be checked
+
+    :returns bool: Whether the given string is a valid Habit Name
+    """
     return input_string is not None and not input_string.isspace() and len(input_string) != 0
 
 
