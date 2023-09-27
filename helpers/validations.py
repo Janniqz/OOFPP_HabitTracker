@@ -1,12 +1,11 @@
-from typing import Union, Optional
+from typing import Optional
 
 import click
-from click import Context
 
 from classes.periodicity import Periodicity
 
 
-def validate_periodicity(ctx: Context, param, value: Union[str, Periodicity]) -> Optional[Periodicity]:
+def validate_periodicity(*args) -> Optional[Periodicity]:
     """
     Validate Habit Periodicity's.
     Attempts to cast retrieve a Periodicity instance if the passed value is a string.
@@ -18,17 +17,24 @@ def validate_periodicity(ctx: Context, param, value: Union[str, Periodicity]) ->
     :returns: Validated Value
     :raises click.BadParameter: Invalid Periodicity value was used
     """
-    if isinstance(value, Periodicity):
-        return value
+    str_value: str
+    if len(args) == 1 and isinstance(args[0], str):
+        str_value = args[0]
+    elif len(args) == 3:
+        if isinstance(args[2], Periodicity):
+            return args[2]
+        str_value = args[2]
+    else:
+        raise click.BadParameter("Invalid Usage of validate_periodicity!")
 
     try:
-        periodicity = Periodicity.from_str(value)
+        periodicity = Periodicity.from_str(str_value)
         return periodicity
     except NotImplementedError:
         raise click.BadParameter("Period must be one of: d/daily w/weekly")
 
 
-def validate_habit_name(ctx: Context, param, value: str) -> Optional[str]:
+def validate_habit_name(*args) -> Optional[str]:
     """
     Validates Habit Names passed as command-line arguments.
     Habit names must consist of at least 1 character that is not whitespace.
@@ -40,6 +46,14 @@ def validate_habit_name(ctx: Context, param, value: str) -> Optional[str]:
     :returns: Validated Value
     :raises click.BadParameter: Empty String was passed
     """
-    if value is not None and (len(value) == 0 or value.isspace()):
+    str_value: str
+    if len(args) == 1 and isinstance(args[0], str):
+        str_value = args[0]
+    elif len(args) == 3:
+        str_value = args[2]
+    else:
+        raise click.BadParameter("Invalid Usage of validate_periodicity!")
+
+    if str_value is not None and (len(str_value) == 0 or str_value.isspace()):
         raise click.BadParameter("Name needs to include at least one non-whitespace Character!")
-    return value
+    return str_value

@@ -48,16 +48,14 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
     Unless a Backup of the Database exists this is irreversible!
     """
     if habit_id is None and not habit_name_condition(habit_name):
-        habit_name = cli_helper.get_input('Name: ', 'Name needs to include at least one non-whitespace Character!', habit_name_condition)
+        habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
     with Session(ctx.obj['connection']) as session:
         target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is None:
             return
 
-        if not cli_helper.confirm_action("Are you sure you want to delete this Habit? (y/n): "):
-            print("Cancelling!")
-            return
+        click.confirm(f'Are you sure you want to delete the Habit \"{target_habit.name}\"?', abort=True)
 
         target_habit.delete(session)
         print(f'Habit \"{target_habit.name}\" has been deleted!')
@@ -95,7 +93,7 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
     If both are given, the ID takes precedence.
     """
     if habit_id is None and not habit_name_condition(habit_name):
-        habit_name = cli_helper.get_input('Name: ', 'Name needs to include at least one non-whitespace Character!', habit_name_condition)
+        habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
     with Session(ctx.obj['connection']) as session:
         target_habit = Habit.get(session, habit_id, habit_name)
