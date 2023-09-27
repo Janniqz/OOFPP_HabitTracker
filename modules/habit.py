@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, List, Type
 
 import click
-from click import Group, Context
+from click import Context
+from sqlalchemy import Select
 from sqlalchemy.orm import Session
 
 from classes.orm.habit import Habit
@@ -10,9 +11,18 @@ from helpers import cli_helper
 from helpers.validations import validate_habit_name, validate_periodicity
 
 
-@click.group()
-def habit() -> Group:
-    pass
+@click.group(invoke_without_command=True)
+@click.pass_context
+def habit(ctx: Context) -> None:
+    if ctx.invoked_subcommand is not None:
+        return
+
+    habits: List[Type[Habit]]
+    with Session(ctx.obj['connection']) as session:
+        statement: Select
+        habits = session.query(Habit).all()
+
+        cli_helper.list_habits(habits)
 
 
 @habit.command(name='create')
@@ -25,7 +35,7 @@ def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
     """
     with Session(ctx.obj['connection']) as session:
         Habit.create(session, habit_name, period)
-        print(f"Habit {habit_name} has been created with a {period.name} Periodicity!")
+        print(f'Habit "{habit_name}" has been created with a {period.name} Periodicity!')
 
 
 @habit.command(name='delete')
@@ -50,7 +60,7 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
             return
 
         target_habit.delete(session)
-        print(f"Habit \"{target_habit.name}\" has been deleted!")
+        print(f'Habit \"{target_habit.name}\" has been deleted!')
 
 
 @habit.command(name='modify')
@@ -91,6 +101,7 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
         target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is not None:
             target_habit.complete(session)
+
 
 # region Helpers
 

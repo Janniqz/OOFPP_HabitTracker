@@ -24,7 +24,7 @@ class Habit(Base):
     creation_date: Mapped[Optional[datetime]] = mapped_column(default=datetime.now(), server_default=func.current_timestamp(), nullable=False)
 
     def __repr__(self) -> str:
-        return f"Habit(id={self.habit_id!r}, name={self.name!r}, periodicity={self.periodicity!r}, creation_date={self.creation_date!r})"
+        return f'Habit(id={self.habit_id!r}, name={self.name!r}, periodicity={self.periodicity!r}, creation_date={self.creation_date!r})'
 
     def update(self, session: Session, new_name: Optional[str] = None, new_periodicity: Optional[Periodicity] = None):
         """
@@ -40,9 +40,9 @@ class Habit(Base):
 
         if changes_made:
             session.commit()
-            print("Habit has been updated!")
+            print('Habit has been updated!')
         else:
-            print("Habit is already up-to-date! Cancelling!")
+            print('Habit is already up-to-date! Cancelling!')
 
     def delete(self, session: Session) -> None:
         """
@@ -81,9 +81,9 @@ class Habit(Base):
             # Check if we already completed the Habit in the current period
             if streak_validity is None:
                 if self.periodicity is Periodicity.Daily:
-                    print("You have already completed this Habit today!")
+                    print('You have already completed this Habit today!')
                 else:
-                    print("You have already completed this Habit this week!")
+                    print('You have already completed this Habit this week!')
                 return None
 
             # Check if we passed the "Break Date" for our current Streak
@@ -139,9 +139,9 @@ class Habit(Base):
         target_habit = session.scalar(statement)
         if target_habit is None:
             if habit_id is not None:
-                print(f"No Habit with ID {habit_id} found! Cancelling!")
+                print(f'No Habit with ID {habit_id} found! Cancelling!')
             else:
-                print(f"No Habit with Name {habit_name} found! Cancelling!")
+                print(f'No Habit with Name {habit_name} found! Cancelling!')
             return None
 
         return target_habit
