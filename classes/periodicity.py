@@ -13,7 +13,7 @@ class Periodicity(Enum):
 
         :param value: Input String
 
-        :returns: Converted Periodicity
+        :returns Periodicity: Converted Periodicity
         :raises NotImplementedError: Invalid Input String
         """
         if value is None:

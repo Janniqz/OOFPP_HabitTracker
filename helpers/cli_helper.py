@@ -9,6 +9,8 @@ from classes.orm.habit import Habit
 def list_habits(habits: List[Type[Habit]]) -> None:
     """
     Prints a formatted table of the given list of habits.
+
+    :param habits: List of Habits to be printed
     """
     data = []
     headers = ["ID", "Name", "Current Streak", "Longest Streak", "Periodicity"]
@@ -22,6 +24,10 @@ def list_habits(habits: List[Type[Habit]]) -> None:
 def colored_print(message: str, color: Optional[TerminalColor] = None, format_: Optional[TerminalFormat] = None) -> None:
     """
     Prints an error message in a formatted way.
+
+    :param message: Message to be printed
+    :param color: Color of the message
+    :param format_: Format of the message
     """
     color = color.value if color is not None else ''
     format_ = format_.value if format_ is not None else ''

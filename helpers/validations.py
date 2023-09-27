@@ -14,7 +14,7 @@ def validate_periodicity(*args) -> Optional[Periodicity]:
     :param param: Parameter to be validated
     :param value: Periodicity to be validated
 
-    :returns: Validated Value
+    :returns Periodicity: Validated Value
     :raises click.BadParameter: Invalid Periodicity value was used
     """
     str_value: str
@@ -43,7 +43,7 @@ def validate_habit_name(*args) -> Optional[str]:
     :param param: Parameter to be validated
     :param value: Habit Name to be validated
 
-    :returns: Validated Value
+    :returns str: Validated Value
     :raises click.BadParameter: Empty String was passed
     """
     str_value: str
