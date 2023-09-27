@@ -103,10 +103,10 @@ class Habit(Base):
 
         return new_entry
 
-# region Static Methods
+# region Class Methods
 
-    @staticmethod
-    def create(session: Session, name: str, periodicity: Periodicity) -> 'Habit':
+    @classmethod
+    def create(cls, session: Session, name: str, periodicity: Periodicity) -> 'Habit':
         """
         Creates a new habit object and saves it to the database.
 
@@ -114,17 +114,17 @@ class Habit(Base):
         :param name: Desired name for the new habit.
         :param periodicity: Desired periodicity for the new habit. Either daily or weekly.
 
-        :returns: Created Habit
+        :returns Habit: Created Habit
         """
-        new_habit = Habit(name=name, periodicity=periodicity)
+        new_habit = cls(name=name, periodicity=periodicity)
 
         session.add(new_habit)
         session.commit()
 
         return new_habit
 
-    @staticmethod
-    def get(session: Session, habit_id: Optional[int] = None, habit_name: Optional[str] = None) -> Optional['Habit']:
+    @classmethod
+    def get(cls, session: Session, habit_id: Optional[int] = None, habit_name: Optional[str] = None) -> Optional['Habit']:
         """
         Retrieves a Habit from the database based on the given ID / Name.
 
@@ -132,16 +132,12 @@ class Habit(Base):
         :param habit_id: ID of the habit to retrieve. Takes precedence over habit_name.
         :param habit_name: Name of the habit to retrieve.
 
-        :returns: Found Habit
+        :returns Habit: Retrieved Habit
         """
-        statement = select(Habit).where(Habit.habit_id.is_(habit_id).__or__(Habit.name.is_(habit_name))).limit(1)
+        statement = select(cls).where(cls.habit_id.is_(habit_id).__or__(cls.name.is_(habit_name))).limit(1)
 
         target_habit = session.scalar(statement)
         if target_habit is None:
-            if habit_id is not None:
-                print(f'No Habit with ID {habit_id} found! Cancelling!')
-            else:
-                print(f'No Habit with Name {habit_name} found! Cancelling!')
             return None
 
         return target_habit
@@ -157,7 +153,7 @@ class Habit(Base):
 
         :param last_completion: Date of the Last completion
 
-        :returns: Streak Validity / None if already completed in Period
+        :returns bool: True if the streak is still active, False otherwise.
         """
         current_date = date.today()
         last_completion_date = last_completion.date()
@@ -181,5 +177,17 @@ class Habit(Base):
             break_date = last_completion_date + timedelta(days=days_until_monday + 7)                                 # Add another week
 
         return current_date < break_date
+
+    @classmethod
+    def exists(cls, session, habit_name) -> bool:
+        """
+        Checks if a Habit with the given name exists.
+
+        :param session: The SQLAlchemy session object.
+        :param habit_name: Name of the Habit to check for.
+
+        :returns bool: True if Habit exists, False otherwise.
+        """
+        return session.query(func.exists().where(cls.name == habit_name)).scalar()
 
 # endregion

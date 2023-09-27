@@ -35,6 +35,10 @@ def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
     Creates a new Habit
     """
     with Session(ctx.obj['connection']) as session:
+        if Habit.exists(session, habit_name):
+            colored_print(f'ERROR: Habit "{habit_name}" already exists!', TerminalColor.RED)
+            return
+
         Habit.create(session, habit_name, period)
         colored_print(f'Habit "{habit_name}" has been created with a {period.name} Periodicity!', TerminalColor.GREEN)
 
@@ -54,6 +58,10 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
     with Session(ctx.obj['connection']) as session:
         target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is None:
+            if habit_id is not None:
+                colored_print(f'No Habit with ID {habit_id} exists!', TerminalColor.YELLOW)
+            else:
+                colored_print(f'No Habit with Name {habit_name} exists!', TerminalColor.YELLOW)
             return
 
         click.confirm(f'Are you sure you want to delete the Habit \"{target_habit.name}\"?', abort=True)
