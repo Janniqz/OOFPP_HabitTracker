@@ -73,14 +73,24 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period:
 
     NOTE: Changing the Periodicity might end your current Streak!
     """
-    if habit_name is None and period is None:
-        print("No fields to change have been passed! Cancelling!")
-        return
-
     with Session(ctx.obj['connection']) as session:
         target_habit = Habit.get(session, habit_id)
-        if target_habit is not None:
-            target_habit.update(session, habit_name, period)
+        if target_habit is None:
+            print(f'No Habit with ID {habit_id} found! Cancelling!')
+            return
+
+        if habit_name is None and period is None:
+            if click.confirm('Should the Habit name be changed?'):
+                habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
+
+            if click.confirm('Should the Habit Periodicity be changed?'):
+                period = click.prompt('Periodicity (d/daily w/weekly)', type=click.UNPROCESSED, value_proc=validate_periodicity)
+
+        if habit_name is None and period is None:
+            print('No fields to change have been passed! Cancelling!')
+            return
+
+        target_habit.update(session, habit_name, period)
 
 
 @habit.command(name='complete')
