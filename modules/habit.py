@@ -15,6 +15,10 @@ from helpers.validations import validate_habit_name, validate_periodicity
 @click.group(invoke_without_command=True)
 @click.pass_context
 def habit(ctx: Context) -> None:
+    """\b
+    Command Group related to Habit Management
+    Prints a list of all existing Habits if no subcommand is given.
+    """
     if ctx.invoked_subcommand is not None:
         return
 
