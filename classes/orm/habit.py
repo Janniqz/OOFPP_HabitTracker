@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, date
 from typing import Optional
 
-from sqlalchemy import func, String, Integer, Enum, CheckConstraint, select, Select, desc
+from sqlalchemy import func, String, Integer, Enum, CheckConstraint, select, Select, desc, exists
 from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from classes.orm.base import Base
@@ -183,7 +183,7 @@ class Habit(Base):
         return current_date < break_date
 
     @classmethod
-    def exists(cls, session, habit_name) -> bool:
+    def exists(cls, session: Session, habit_name: str) -> bool:
         """
         Checks if a Habit with the given name exists.
 
@@ -192,6 +192,6 @@ class Habit(Base):
 
         :returns bool: True if Habit exists, False otherwise.
         """
-        return session.query(func.exists().where(cls.name == habit_name)).scalar()
+        return session.query(exists().where(cls.name == habit_name)).scalar()
 
 # endregion
