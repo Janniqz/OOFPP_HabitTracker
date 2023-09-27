@@ -96,7 +96,10 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], periodi
             colored_print('No fields to change have been passed! Cancelling!', TerminalColor.YELLOW)
             return
 
-        target_habit.update(session, habit_name, period)
+        if target_habit.update(session, habit_name, periodicity):
+            colored_print('Habit has been updated!', TerminalColor.GREEN)
+        else:
+            colored_print('Habit is already up-to-date! Cancelling!', TerminalColor.YELLOW)
 
 
 @habit.command(name='complete')
@@ -117,7 +120,11 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
             colored_print(f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', TerminalColor.YELLOW)
             return
 
-        _, streak_broken = target_habit.complete(session)
+        habit_entry, streak_broken = target_habit.complete(session)
+        if habit_entry is None:
+            colored_print(f'You have already completed this Habit {"today" if target_habit.periodicity is Periodicity.Daily else "this week"}!', TerminalColor.YELLOW)
+            return
+
         if streak_broken:
             colored_print(f'Your streak for Habit \"{target_habit.name}\" has been broken!', TerminalColor.YELLOW)
 

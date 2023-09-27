@@ -26,9 +26,15 @@ class Habit(Base):
     def __repr__(self) -> str:
         return f'Habit(id={self.habit_id!r}, name={self.name!r}, periodicity={self.periodicity!r}, creation_date={self.creation_date!r})'
 
-    def update(self, session: Session, new_name: Optional[str] = None, new_periodicity: Optional[Periodicity] = None):
+    def update(self, session: Session, new_name: Optional[str] = None, new_periodicity: Optional[Periodicity] = None) -> bool:
         """
         Updates the habit with new name and/or periodicity.
+
+        :param session: The SQLAlchemy session object.
+        :param new_name: New name for the habit.
+        :param new_periodicity: New periodicity for the habit.
+
+        :returns bool: True if changes were made, False otherwise.
         """
         changes_made = False
         if new_name is not None and new_name != self.name:
@@ -40,9 +46,8 @@ class Habit(Base):
 
         if changes_made:
             session.commit()
-            print('Habit has been updated!')
-        else:
-            print('Habit is already up-to-date! Cancelling!')
+
+        return changes_made
 
     def delete(self, session: Session) -> None:
         """
@@ -82,10 +87,6 @@ class Habit(Base):
 
             # Check if we already completed the Habit in the current period
             if streak_validity is None:
-                if self.periodicity is Periodicity.Daily:
-                    print('You have already completed this Habit today!')
-                else:
-                    print('You have already completed this Habit this week!')
                 return None
 
             # Check if we passed the "Break Date" for our current Streak
