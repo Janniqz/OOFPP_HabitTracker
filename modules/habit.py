@@ -5,9 +5,10 @@ from click import Context
 from sqlalchemy import Select
 from sqlalchemy.orm import Session
 
+from classes.helpers.terminal_options import TerminalColor
 from classes.orm.habit import Habit
 from classes.periodicity import Periodicity
-from helpers import cli_helper
+from helpers.cli_helper import colored_print, list_habits
 from helpers.validations import validate_habit_name, validate_periodicity
 
 
@@ -22,7 +23,7 @@ def habit(ctx: Context) -> None:
         statement: Select
         habits = session.query(Habit).all()
 
-        cli_helper.list_habits(habits)
+        list_habits(habits)
 
 
 @habit.command(name='create')
@@ -35,7 +36,7 @@ def habit_create(ctx: Context, habit_name: str, period: Periodicity) -> None:
     """
     with Session(ctx.obj['connection']) as session:
         Habit.create(session, habit_name, period)
-        print(f'Habit "{habit_name}" has been created with a {period.name} Periodicity!')
+        colored_print(f'Habit "{habit_name}" has been created with a {period.name} Periodicity!', TerminalColor.GREEN)
 
 
 @habit.command(name='delete')
@@ -58,7 +59,7 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
         click.confirm(f'Are you sure you want to delete the Habit \"{target_habit.name}\"?', abort=True)
 
         target_habit.delete(session)
-        print(f'Habit \"{target_habit.name}\" has been deleted!')
+        colored_print(f'Habit \"{target_habit.name}\" has been deleted!', TerminalColor.GREEN)
 
 
 @habit.command(name='modify')
@@ -76,7 +77,7 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period:
     with Session(ctx.obj['connection']) as session:
         target_habit = Habit.get(session, habit_id)
         if target_habit is None:
-            print(f'No Habit with ID {habit_id} found! Cancelling!')
+            colored_print(f'ERROR: No Habit with ID {habit_id} found!', TerminalColor.RED)
             return
 
         if habit_name is None and period is None:
@@ -87,7 +88,7 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], period:
                 period = click.prompt('Periodicity (d/daily w/weekly)', type=click.UNPROCESSED, value_proc=validate_periodicity)
 
         if habit_name is None and period is None:
-            print('No fields to change have been passed! Cancelling!')
+            colored_print('No fields to change have been passed! Cancelling!', TerminalColor.YELLOW)
             return
 
         target_habit.update(session, habit_name, period)
