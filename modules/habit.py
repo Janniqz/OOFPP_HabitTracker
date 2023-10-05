@@ -16,7 +16,7 @@ from helpers.validations import validate_habit_name, validate_periodicity
 @click.pass_context
 def habit(ctx: Context) -> None:
     """\b
-    Command Group related to Habit Management
+    Module related to Habit Management.
     Prints a list of all existing Habits if no subcommand is given.
     """
     if ctx.invoked_subcommand is not None:
@@ -108,7 +108,7 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], periodi
 
 @habit.command(name='complete')
 @click.option('-i', '--id', 'habit_id', type=int, default=None, help='ID of the Habit that should be searched for. Takes precedence over --name.')
-@click.option('-n', '--name', 'habit_name', required=False, prompt=True, help='Name of the Habit to help with identification', type=str)
+@click.option('-n', '--name', 'habit_name', required=False, help='Name of the Habit to help with identification', type=str)
 @click.pass_context
 def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str]) -> None:
     """\b

@@ -10,7 +10,7 @@ from helpers.validations import validate_periodicity
 @click.group()
 def analytics() -> Group:
     """\b
-    Command Group related to Habit Analytics
+    Module related to Habit Analytics
     """
     pass
 

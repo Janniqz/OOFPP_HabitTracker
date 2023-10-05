@@ -1,5 +1,6 @@
 from typing import Type, List, Optional
 
+import click
 from tabulate import tabulate
 
 from classes.helpers.terminal_options import TerminalColor, TerminalFormat
@@ -32,4 +33,4 @@ def colored_print(message: str, color: Optional[TerminalColor] = None, format_: 
     color = color.value if color is not None else ''
     format_ = format_.value if format_ is not None else ''
 
-    print(f'{color}{format_}{message}\033[0m')
+    click.echo(f'{color}{format_}{message}\033[0m', color=True)
