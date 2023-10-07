@@ -23,7 +23,7 @@ def analytics() -> Group:
 
 @analytics.command(name='list')
 @click.option('-p', '--period', 'periodicity', default=None, help='Periodicity of the Habit(s) that should be searched for.', type=click.UNPROCESSED, callback=validate_periodicity)
-@click.option('-s', '--sort', 'sort_order', default='CreationDate', help='Field by which Habit(s) should be sorted by.', type=click.Choice(['ID', 'Name', 'Streak', 'HighestStreak', 'Periodicity', 'CreationDate', 'TotalCompletions', 'MostRecentCompletion'], case_sensitive=False))
+@click.option('-s', '--sort', 'sort_order', default='ID', help='Field by which Habit(s) should be sorted by.', type=click.Choice(['ID', 'Name', 'Streak', 'HighestStreak', 'Periodicity', 'CreationDate', 'TotalCompletions', 'MostRecentCompletion'], case_sensitive=False))
 @click.option('--asc', 'sort_order_asc', default=False, is_flag=True, help='Sort Habit(s) in ascending order.', type=bool)
 @click.option('--desc', 'sort_order_desc', default=False, is_flag=True, help='Sort Habit(s) in descending order.', type=bool)
 @click.pass_context
