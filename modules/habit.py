@@ -23,7 +23,7 @@ def habit(ctx: Context) -> None:
         return
 
     habits: List[Type[Habit]]
-    with Session(ctx.obj['connection']) as session:
+    with ctx.obj['session_maker']() as session:
         statement: Select
         habits = session.query(Habit).all()
 
@@ -38,7 +38,7 @@ def habit_create(ctx: Context, habit_name: str, periodicity: Periodicity) -> Non
     """\b
     Creates a new Habit
     """
-    with Session(ctx.obj['connection']) as session:
+    with ctx.obj['session_maker']() as session:
         if Habit.exists(session, habit_name):
             colored_print(f'ERROR: Habit "{habit_name}" already exists!', TerminalColor.RED)
             return
@@ -59,7 +59,7 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
     if habit_id is None and not habit_name_condition(habit_name):
         habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
-    with Session(ctx.obj['connection']) as session:
+    with ctx.obj['session_maker']() as session:
         target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is None:
             colored_print(f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', TerminalColor.YELLOW)
@@ -83,7 +83,7 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], periodi
 
     NOTE: Changing the Periodicity might end your current Streak!
     """
-    with Session(ctx.obj['connection']) as session:
+    with ctx.obj['session_maker']() as session:
         target_habit = Habit.get(session, habit_id)
         if target_habit is None:
             colored_print(f'ERROR: No Habit with ID {habit_id} found!', TerminalColor.RED)
@@ -118,7 +118,7 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
     if habit_id is None and not habit_name_condition(habit_name):
         habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
-    with Session(ctx.obj['connection']) as session:
+    with ctx.obj['session_maker']() as session:
         target_habit = Habit.get(session, habit_id, habit_name)
         if target_habit is None:
             colored_print(f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', TerminalColor.YELLOW)

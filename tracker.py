@@ -1,4 +1,5 @@
 import click
+from sqlalchemy.orm import sessionmaker
 
 from classes.orm.base import Base
 from classes.orm.habit import Habit  # noqa
@@ -22,8 +23,8 @@ def cli(ctx):
         return
 
     ctx.ensure_object(dict)
-    ctx.obj['connection'] = create_engine("sqlite:///habits.sqlite")
-    Base.metadata.create_all(ctx.obj['connection'])
+    ctx.obj['session_maker'] = sessionmaker(bind=create_engine("sqlite:///habits.sqlite"))
+    Base.metadata.create_all(ctx.obj['session_maker']())
     pass
 
 

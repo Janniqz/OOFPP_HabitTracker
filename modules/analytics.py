@@ -34,7 +34,7 @@ def analytics_list(ctx: Context, periodicity: Optional[Periodicity], sort_order:
     If a Periodicity is given, uses it as a filter.
     If a Sort Order is given, uses it to sort the Habits by the given field.
     """
-    with Session(ctx.obj['connection']) as session:
+    with ctx.obj['session_maker']() as session:
         query = (session.query(Habit,
                                func.count(HabitEntry.habit_entry_id).label('total_completions'),
                                func.max(HabitEntry.completion_date).label('most_recent_completion'))
@@ -72,7 +72,7 @@ def analytics_longest_streak(ctx: Context, habit_id: Optional[int], name: Option
     If neither an ID nor a Name is given, the Habit with the longest total streak is returned.
     This can additionally be refined by specifying a Periodicity.
     """
-    with Session(ctx.obj['connection']) as session:
+    with ctx.obj['session_maker']() as session:
         query = session.query(Habit)
 
         specific_habit = habit_id is not None or name is not None
