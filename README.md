@@ -57,6 +57,10 @@ The following commands are available in the Analytics module:
 - `analytics list` - Lists all habits and their statistics with various filter options
 - `analytics streak` - Lists all habits and their streaks with various filter options
 
+Examples:<br>
+`tracker.exe analytics list --sort Name --desc`<br>
+`tracker.exe analytics streak --name "Drink 2L of water" --active`
+
 ### 1.3 General
 
 Every command mentioned above also has a `--help` option which displays a help message for the command.<br>

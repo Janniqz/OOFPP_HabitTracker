@@ -96,9 +96,9 @@ def analytics_longest_streak(ctx: Context, habit_id: Optional[int], name: Option
         streak_value = habit_with_longest_streak.streak if active else habit_with_longest_streak.highest_streak
 
         if specific_habit:
-            colored_print(f"The Habit {habit_with_longest_streak.name} has a{'n active' if active else ' longest'} streak of {streak_value}", TerminalColor.GREEN)
+            colored_print(f"The Habit {habit_with_longest_streak.name} has a{'n active' if active else ' longest'} streak of {streak_value}!", TerminalColor.GREEN)
         else:
-            colored_print(f"The Habit with the longest{' active' if active else ''} streak is: {habit_with_longest_streak.name} with a streak of {streak_value}", TerminalColor.GREEN)
+            colored_print(f"The Habit with the longest{' active' if active else ''} streak is: {habit_with_longest_streak.name} with a streak of {streak_value}!", TerminalColor.GREEN)
 
 
 # region Helpers
