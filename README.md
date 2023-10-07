@@ -68,3 +68,9 @@ Every command mentioned above also has a `--help` option which displays a help m
 When used with the main command of either module, it displays a list of all available subcommands.<br>
 When used with a specific command, it displays the required and optional arguments for the command.
 
+# Running Tests
+
+Test files are located in the `tests` directory and can be run through the command line.<br>
+
+To run all tests, run `pytest` in the project directory.<br>
+To run a specific test file, run `pytest tests/<test_file>` in the project directory.<br>
