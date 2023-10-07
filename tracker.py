@@ -22,9 +22,11 @@ def cli(ctx):
     if ctx.invoked_subcommand is None:
         return
 
+    engine = create_engine("sqlite:///habits.sqlite")
+
     ctx.ensure_object(dict)
-    ctx.obj['session_maker'] = sessionmaker(bind=create_engine("sqlite:///habits.sqlite"))
-    Base.metadata.create_all(ctx.obj['session_maker']())
+    ctx.obj['session_maker'] = sessionmaker(bind=engine)
+    Base.metadata.create_all(bind=engine)
     pass
 
 
