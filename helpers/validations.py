@@ -25,13 +25,13 @@ def validate_periodicity(*args) -> Optional[Periodicity]:
             return args[2]
         str_value = args[2]
     else:
-        raise click.BadParameter("Invalid Usage of validate_periodicity!")
+        raise click.BadParameter(message="Invalid Usage of validate_periodicity!")
 
     try:
-        periodicity = Periodicity.from_str(str_value)
+        periodicity = Periodicity.from_str(value=str_value)
         return periodicity
     except NotImplementedError:
-        raise click.BadParameter("Period must be one of: d/daily w/weekly")
+        raise click.BadParameter(message="Period must be one of: d/daily w/weekly")
 
 
 def validate_habit_name(*args) -> Optional[str]:
@@ -52,8 +52,8 @@ def validate_habit_name(*args) -> Optional[str]:
     elif len(args) == 3:
         str_value = args[2]
     else:
-        raise click.BadParameter("Invalid Usage of validate_periodicity!")
+        raise click.BadParameter(message="Invalid Usage of validate_periodicity!")
 
     if str_value is not None and (len(str_value) == 0 or str_value.isspace()):
-        raise click.BadParameter("Name needs to include at least one non-whitespace Character!")
+        raise click.BadParameter(message="Name needs to include at least one non-whitespace Character!")
     return str_value

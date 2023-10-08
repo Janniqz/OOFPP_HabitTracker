@@ -15,4 +15,4 @@ class HabitEntry(Base):
     completion_date: Mapped[Optional[datetime]] = mapped_column(default=datetime.today(), server_default=func.current_timestamp())
 
     def __repr__(self) -> str:
-        return f"HabitEntry(id={self.habit_id!r}, habit_id={self.habit_id!r}, completion_date={self.completion_date!r})"
+        return f'HabitEntry(id={self.habit_id!r}, habit_id={self.habit_id!r}, completion_date={self.completion_date!r})'

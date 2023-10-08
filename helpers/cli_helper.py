@@ -47,4 +47,4 @@ def colored_print(message: str, color: Optional[TerminalColor] = None, format_: 
     color = color.value if color is not None else ''
     format_ = format_.value if format_ is not None else ''
 
-    click.echo(f'{color}{format_}{message}\033[0m', color=True)
+    click.echo(message=f'{color}{format_}{message}\033[0m', color=True)

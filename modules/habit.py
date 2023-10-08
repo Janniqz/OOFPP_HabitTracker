@@ -23,11 +23,11 @@ def habit(ctx: Context) -> None:
         return
 
     habits: List[Type[Habit]]
-    with ctx.obj['session_maker']() as session:
+    with ctx.obj['session_maker']() as session:  # type: Session
         statement: Select
         habits = session.query(Habit).all()
 
-        list_habits(habits)
+        list_habits(habits=habits)
 
 
 @habit.command(name='create')
@@ -38,13 +38,13 @@ def habit_create(ctx: Context, habit_name: str, periodicity: Periodicity) -> Non
     """\b
     Creates a new Habit
     """
-    with ctx.obj['session_maker']() as session:
-        if Habit.exists(session, habit_name):
-            colored_print(f'ERROR: Habit "{habit_name}" already exists!', TerminalColor.RED)
+    with ctx.obj['session_maker']() as session:  # type: Session
+        if Habit.exists(session=session, habit_name=habit_name):
+            colored_print(message=f'ERROR: Habit "{habit_name}" already exists!', color=TerminalColor.RED)
             return
 
-        Habit.create(session, habit_name, periodicity)
-        colored_print(f'Habit "{habit_name}" has been created with a {periodicity.name} Periodicity!', TerminalColor.GREEN)
+        Habit.create(session=session, habit_name=habit_name, periodicity=periodicity)
+        colored_print(message=f'Habit "{habit_name}" has been created with a {periodicity.name} Periodicity!', color=TerminalColor.GREEN)
 
 
 @habit.command(name='delete')
@@ -59,16 +59,16 @@ def habit_delete(ctx: Context, habit_id: Optional[int], habit_name: Optional[str
     if habit_id is None and not habit_name_condition(habit_name):
         habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
-    with ctx.obj['session_maker']() as session:
-        target_habit = Habit.get(session, habit_id, habit_name)
+    with ctx.obj['session_maker']() as session:  # type: Session
+        target_habit = Habit.get(session=session, habit_id=habit_id, habit_name=habit_name)
         if target_habit is None:
-            colored_print(f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', TerminalColor.YELLOW)
+            colored_print(message=f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', color=TerminalColor.YELLOW)
             return
 
-        click.confirm(f'Are you sure you want to delete the Habit \"{target_habit.name}\"?', abort=True)
+        click.confirm(text=f'Are you sure you want to delete the Habit \"{target_habit.name}\"?', abort=True)
 
-        target_habit.delete(session)
-        colored_print(f'Habit \"{target_habit.name}\" has been deleted!', TerminalColor.GREEN)
+        target_habit.delete(session=session)
+        colored_print(message=f'Habit \"{target_habit.name}\" has been deleted!', color=TerminalColor.GREEN)
 
 
 @habit.command(name='modify')
@@ -83,27 +83,27 @@ def habit_modify(ctx: Context, habit_id: int, habit_name: Optional[str], periodi
 
     NOTE: Changing the Periodicity might end your current Streak!
     """
-    with ctx.obj['session_maker']() as session:
-        target_habit = Habit.get(session, habit_id)
+    with ctx.obj['session_maker']() as session:  # type: Session
+        target_habit = Habit.get(session=session, habit_id=habit_id)
         if target_habit is None:
-            colored_print(f'ERROR: No Habit with ID {habit_id} found!', TerminalColor.RED)
+            colored_print(message=f'ERROR: No Habit with ID {habit_id} found!', color=TerminalColor.RED)
             return
 
         if habit_name is None and periodicity is None:
             if click.confirm('Should the Habit name be changed?'):
-                habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
+                habit_name = click.prompt(text='Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
             if click.confirm('Should the Habit Periodicity be changed?'):
-                periodicity = click.prompt('Periodicity (d/daily w/weekly)', type=click.UNPROCESSED, value_proc=validate_periodicity)
+                periodicity = click.prompt(text='Periodicity (d/daily w/weekly)', type=click.UNPROCESSED, value_proc=validate_periodicity)
 
         if habit_name is None and periodicity is None:
-            colored_print('No fields to change have been passed! Cancelling!', TerminalColor.YELLOW)
+            colored_print(message='No fields to change have been passed! Cancelling!', color=TerminalColor.YELLOW)
             return
 
-        if target_habit.update(session, habit_name, periodicity):
-            colored_print('Habit has been updated!', TerminalColor.GREEN)
+        if target_habit.update(session=session, new_name=habit_name, new_periodicity=periodicity):
+            colored_print(message='Habit has been updated!', color=TerminalColor.GREEN)
         else:
-            colored_print('Habit is already up-to-date! Cancelling!', TerminalColor.YELLOW)
+            colored_print(message='Habit is already up-to-date! Cancelling!', color=TerminalColor.YELLOW)
 
 
 @habit.command(name='complete')
@@ -115,24 +115,24 @@ def habit_complete(ctx: Context, habit_id: Optional[int], habit_name: Optional[s
     Completes a habit via either its ID or name.
     If both are given, the ID takes precedence.
     """
-    if habit_id is None and not habit_name_condition(habit_name):
-        habit_name = click.prompt('Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
+    if habit_id is None and not habit_name_condition(input_string=habit_name):
+        habit_name = click.prompt(text='Name', type=click.UNPROCESSED, value_proc=validate_habit_name)
 
-    with ctx.obj['session_maker']() as session:
-        target_habit = Habit.get(session, habit_id, habit_name)
+    with ctx.obj['session_maker']() as session:  # type: Session
+        target_habit = Habit.get(session=session, habit_id=habit_id, habit_name=habit_name)
         if target_habit is None:
-            colored_print(f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', TerminalColor.YELLOW)
+            colored_print(message=f'No Habit with {"ID" if habit_id is not None else "Name"} {habit_id or habit_name} exists!', color=TerminalColor.YELLOW)
             return
 
         habit_entry, streak_broken = target_habit.complete(session)
         if habit_entry is None:
-            colored_print(f'You have already completed this Habit {"today" if target_habit.periodicity is Periodicity.Daily else "this week"}!', TerminalColor.YELLOW)
+            colored_print(message=f'You have already completed this Habit {"today" if target_habit.periodicity is Periodicity.Daily else "this week"}!', color=TerminalColor.YELLOW)
             return
 
         if streak_broken:
-            colored_print(f'Your streak for Habit \"{target_habit.name}\" has been broken!', TerminalColor.YELLOW)
+            colored_print(message=f'Your streak for Habit \"{target_habit.name}\" has been broken!', color=TerminalColor.YELLOW)
 
-        colored_print(f'You have completed Habit \"{target_habit.name}\"! (Streak: {target_habit.streak})', TerminalColor.GREEN)
+        colored_print(message=f'You have completed Habit \"{target_habit.name}\"! (Streak: {target_habit.streak})', color=TerminalColor.GREEN)
 
 
 # region Helpers

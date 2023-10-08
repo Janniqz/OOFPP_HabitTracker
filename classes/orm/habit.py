@@ -110,17 +110,17 @@ class Habit(Base):
 # region Class Methods
 
     @classmethod
-    def create(cls, session: Session, name: str, periodicity: Periodicity) -> 'Habit':
+    def create(cls, session: Session, habit_name: str, periodicity: Periodicity) -> 'Habit':
         """
         Creates a new habit object and saves it to the database.
 
         :param session: The SQLAlchemy session object.
-        :param name: Desired name for the new habit.
+        :param habit_name: Desired name for the new habit.
         :param periodicity: Desired periodicity for the new habit. Either daily or weekly.
 
         :returns Habit: Created Habit
         """
-        new_habit = cls(name=name, periodicity=periodicity)
+        new_habit = cls(name=habit_name, periodicity=periodicity)
 
         session.add(new_habit)
         session.commit()

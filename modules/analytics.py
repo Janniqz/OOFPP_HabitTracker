@@ -34,7 +34,7 @@ def analytics_list(ctx: Context, periodicity: Optional[Periodicity], sort_order:
     If a Periodicity is given, uses it as a filter.
     If a Sort Order is given, uses it to sort the Habits by the given field.
     """
-    with ctx.obj['session_maker']() as session:
+    with ctx.obj['session_maker']() as session:  # type: Session
         query = (session.query(Habit,
                                func.count(HabitEntry.habit_entry_id).label('total_completions'),
                                func.max(HabitEntry.completion_date).label('most_recent_completion'))
@@ -44,7 +44,7 @@ def analytics_list(ctx: Context, periodicity: Optional[Periodicity], sort_order:
         if periodicity is not None:
             query = query.filter(Habit.periodicity == periodicity)
 
-        target, number_based = get_sort_target(sort_order)
+        target, number_based = get_sort_target(sort=sort_order)
         if number_based and not sort_order_asc and not sort_order_desc:
             sort_order_desc = True
 
@@ -55,7 +55,7 @@ def analytics_list(ctx: Context, periodicity: Optional[Periodicity], sort_order:
                 query = query.order_by(target.asc())
 
         habits = query.all()
-        list_habits(habits, extra_headers=['Total Completions', 'Most Recent Completion'])
+        list_habits(habits=habits, extra_headers=['Total Completions', 'Most Recent Completion'])
 
 
 @analytics.command(name='streak')
@@ -72,7 +72,7 @@ def analytics_longest_streak(ctx: Context, habit_id: Optional[int], name: Option
     If neither an ID nor a Name is given, the Habit with the longest total streak is returned.
     This can additionally be refined by specifying a Periodicity.
     """
-    with ctx.obj['session_maker']() as session:
+    with ctx.obj['session_maker']() as session:  # type: Session
         query = session.query(Habit)
 
         specific_habit = habit_id is not None or name is not None
@@ -90,15 +90,15 @@ def analytics_longest_streak(ctx: Context, habit_id: Optional[int], name: Option
         habit_with_longest_streak = query.first()
 
         if habit_with_longest_streak is None:
-            colored_print('No Matching Habit found.', TerminalColor.YELLOW)
+            colored_print(message='No Matching Habit found.', color=TerminalColor.YELLOW)
             return
 
         streak_value = habit_with_longest_streak.streak if active else habit_with_longest_streak.highest_streak
 
         if specific_habit:
-            colored_print(f"The Habit {habit_with_longest_streak.name} has a{'n active' if active else ' longest'} streak of {streak_value}!", TerminalColor.GREEN)
+            colored_print(message=f'The Habit {habit_with_longest_streak.name} has a{'n active' if active else ' longest'} streak of {streak_value}!', color=TerminalColor.GREEN)
         else:
-            colored_print(f"The Habit with the longest{' active' if active else ''} streak is: {habit_with_longest_streak.name} with a streak of {streak_value}!", TerminalColor.GREEN)
+            colored_print(message=f'The Habit with the longest{' active' if active else ''} streak is: {habit_with_longest_streak.name} with a streak of {streak_value}!', color=TerminalColor.GREEN)
 
 
 # region Helpers
